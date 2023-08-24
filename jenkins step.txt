@@ -1,0 +1,103 @@
+git@github.com:soheldev/Petclinic.git
+
+
+##################----INSTALL TOMCAT----##################
+
+/opt sudo wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.65/bin/apache-tomcat-9.0.65.tar.gz
+sudo tar -xvf apache-tomcat-9.0.65.tar.gz
+
+cd /opt/apache-tomcat-9.0.65/conf
+sudo vi tomcat-users.xml
+---add-below-line at the end (2nd-last line)----
+<user username="admin" password="admin1234" roles="admin-gui, manager-gui"/>
+
+
+
+sudo ln -s /opt/apache-tomcat-9.0.65/bin/startup.sh /usr/bin/startTomcat
+sudo ln -s /opt/apache-tomcat-9.0.65/bin/shutdown.sh /usr/bin/stopTomcat
+
+
+
+sudo vi /opt/apache-tomcat-9.0.65/webapps/manager/META-INF/context.xml
+comment:
+  <!-- Valve className="org.apache.catalina.valves.RemoteAddrValve"
+  allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" /> -->
+  
+sudo vi /opt/apache-tomcat-9.0.65/webapps/host-manager/META-INF/context.xml
+comment:
+  <!-- Valve className="org.apache.catalina.valves.RemoteAddrValve"
+  allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" /> -->
+
+
+
+sudo stopTomcat
+sudo startTomcat
+
+
+
+sudo  cp /home/ubuntu/myagent/_work/5/s/target/petclinic.war /opt/apache-tomcat-9.0.65/webapps/
+
+##################-----PIPELINE------###################
+
+
+pipeline {
+  agent any
+  
+  stages {
+    stage('Git Checkout') {
+      steps {
+        // Git checkout
+        git branch: '<branch_name>', url: '<git_repository_url>'
+      }
+    }
+    
+    stage('Maven Compile') {
+      steps {
+        // Maven compile
+        sh 'mvn compile'
+      }
+    }
+    
+    stage('Maven Package') {
+      steps {
+        // Maven package
+        sh 'mvn package'
+      }
+    }
+    
+    stage('Deploy to Tomcat') {
+      steps {
+        // Deploy to Tomcat
+        sh 'cp target/webapp.war /path/to/tomcat/webapps/'
+      }
+    }
+  }
+}
+
+
+#############################-----STEPS-----###########################
+
+
+--- JDK & Maven Installation ---
+
+sudo apt-get update -y
+sudo apt install openjdk-17-jre -y
+sudo apt-get install maven -y
+
+======================================================================================================================================
+
+--- INSTALL JENKINS ---
+documention form jenkins io website:
+sudo apt install openjdk-17-jre
+
+curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
+  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt-get update -y 
+sudo apt-get install jenkins -y
+
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+sudo systemctl status jenkins
